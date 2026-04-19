@@ -1,0 +1,4 @@
+__pychache__/
+*.csv
+.venv/
+env/
