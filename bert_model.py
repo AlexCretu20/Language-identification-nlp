@@ -11,15 +11,15 @@ class BertLanguageClassifier:
     def predict_one(self, text):
         text = clean_data(text)
 
-        result = self.model(text)[0]
+        result = self.model(text, truncation=True, max_length=512)[0]
 
         # label vine gen "en", "ro"
         return result["label"]
 
     def predict(self, texts):
         return [self.predict_one(t) for t in texts]
-    
+
     def predict_one_with_score(self, text):
         text = clean_data(text)
-        result = self.model(text)[0]
+        result = self.model(text, truncation=True, max_length=512)[0]
         return result["label"], round(result["score"], 3)

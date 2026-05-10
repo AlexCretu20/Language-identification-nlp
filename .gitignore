@@ -1,4 +1,5 @@
 __pychache__/
 *.csv
 .venv/
+codeswitch_model/
 env/

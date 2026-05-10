@@ -4,7 +4,6 @@ import pandas as pd
 from tfidf_model import TfidfLanguageClassifier
 from bert_model import BertLanguageClassifier
 from shared_data import clean_data
-
 # =========================
 # LOAD & TRAIN TF-IDF MODEL
 # =========================
@@ -26,6 +25,23 @@ print("Loading BERT model...")
 bert_model = BertLanguageClassifier()
 print("BERT ready!")
 
+# =========================
+# LOAD CODE-SWITCHING MODEL
+# =========================
+try:
+    from codeswitching_model import CodeSwitchingDetector
+    import os
+    if os.path.exists("codeswitch_model"):
+        print("Loading code-switch model...")
+        cs_detector = CodeSwitchingDetector()
+        cs_detector.load("codeswitch_model")
+        print("Code-switching model ready!")
+    else:
+        cs_detector = None
+        print("WARNING: codeswitch_model/ folder not found. Run Colab notebook first.")
+except Exception as e:
+    cs_detector = None
+    print(f"WARNING: Code-switching model not loaded ({e}). Run Colab notebook first.")
 # =========================
 # PREDICTION FUNCTION
 # =========================
@@ -78,9 +94,9 @@ examples = [
 ]
 
 # =========================
-# GRADIO APP
+# GRADIO INTERFACES
 # =========================
-app = gr.Interface(
+lang_interface = gr.Interface(
     fn=identify_language,
     inputs=gr.Textbox(lines=4, placeholder="Enter text here..."),
     outputs=gr.Markdown(),
@@ -94,6 +110,33 @@ Compare **TF-IDF (classical ML)** vs **BERT (deep learning)**.
 - informal text
 - mixed languages (romgleză)
 """
+)
+
+
+def detect_codeswitching(text):
+    if cs_detector is None:
+        return [("⚠️ cs_model/ not found. Run Colab notebook first.", "OTHER")]
+    return cs_detector.predict_tokens(text)
+
+
+cs_interface = gr.Interface(
+    fn=detect_codeswitching,
+    inputs=gr.Textbox(lines=2, placeholder="Ce faci bro how are you..."),
+    outputs=gr.HighlightedText(color_map={"EN": "blue", "RO": "green", "OTHER": "gray"}),
+    examples=[
+        ["Ce faci bro how are you"],
+        ["Merg la gym dupa work"],
+        ["Deadline-ul e maine si n-am facut nimic"],
+        ["Am dat update la laptop si acum crapa tot"],
+        ["Bro seriously nu mai pot cu oamenii astia"],
+    ],
+    title="Code-Switching Detector",
+    description="Detecteaza limba fiecarui cuvant: 🟢 Romana | 🔵 Engleza",
+)
+
+app = gr.TabbedInterface(
+    [lang_interface, cs_interface],
+    ["Language Identification", "Code-Switching"],
 )
 
 app.launch()

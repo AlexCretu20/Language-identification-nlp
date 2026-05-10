@@ -7,13 +7,16 @@ from shared_data import TARGET_LAN, LANG_MAP,  clean_data
 def get_wili():
 
     wili = load_dataset("wili_2018")
+    # WiLI labels are integers; decode them to 3-letter ISO codes via ClassLabel names
+    label_names = wili['train'].features['label'].names
+
     df_wili = pd.concat([
         pd.DataFrame(wili['train']),
         pd.DataFrame(wili['test'])],
         ignore_index = True)
 
-    df_wili = df_wili.rename(columns={'sentence': 'text', 'label': 'labels'})
-    df_wili['labels'] = df_wili['labels'].map(LANG_MAP)
+    df_wili = df_wili.rename(columns={'sentence': 'text'})
+    df_wili['labels'] = df_wili['label'].map(lambda x: LANG_MAP.get(label_names[x]))
     df_wili_final = df_wili[df_wili['labels'].isin(TARGET_LAN)].copy()
 
     return  df_wili_final
